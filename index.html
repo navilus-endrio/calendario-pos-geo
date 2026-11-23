@@ -3,65 +3,376 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Calendário de aulas — Pós em Georreferenciamento</title>
+<title>Planner da Pós — Georreferenciamento</title>
 <style>
-:root{--bg:#fff;--fg:#1f1f1d;--muted:#8a8984;--sec:#5f5e5a;--line:#e3e1da;--a-bg:#e1f5ee;--a-fg:#0f6e56;--b-bg:#eeedfe;--b-fg:#534ab7;--n-bg:#f1efe8;--r-bg:#fcebeb;--r-fg:#a32d2d}
-@media (prefers-color-scheme:dark){:root{--bg:#1c1c1a;--fg:#ecebe6;--muted:#888780;--sec:#b4b2a9;--line:#3a3a37;--a-bg:#085041;--a-fg:#9fe1cb;--b-bg:#3c3489;--b-fg:#cecbf6;--n-bg:#2c2c2a;--r-bg:#501313;--r-fg:#f09595}}
-body{margin:0;padding:24px;background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
-main{max-width:760px;margin:0 auto}
-h1{font-size:20px;font-weight:500;margin:0 0 4px}
-.sub{color:var(--sec);font-size:13px;margin:0 0 16px}
-.key{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--sec);margin:0 0 12px}
-.cal{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin:0 0 20px}
-.m h2{font-size:14px;font-weight:500;margin:0 0 6px;text-transform:capitalize}
-.g{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:11px;text-align:center}
-.g span{padding:3px 0;border-radius:4px}
-.wd{color:var(--muted)}
-.lg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px 16px;font-size:12px}
-.lg div{display:flex;gap:8px;align-items:center;padding:4px 6px;border-radius:6px}
-.lg .now{outline:1px solid var(--line)}
-.sw{width:12px;height:12px;border-radius:3px;flex:none}
-.r{color:var(--sec)}
+:root{
+  --fg:#1d1838;--sec:#5f5a7e;--muted:#9a95b5;
+  --glass:rgba(255,255,255,.42);--glass-2:rgba(255,255,255,.62);--edge:rgba(255,255,255,.75);--line:rgba(120,100,190,.14);
+  --violet:#7c6cf5;--blue:#4f9cf9;--pink:#f06aa8;--peach:#fb9b5f;
+  --grad:linear-gradient(90deg,#7c6cf5,#4f9cf9 50%,#f06aa8);
+  --shadow:0 20px 50px -20px rgba(110,80,200,.35),inset 0 1px 0 rgba(255,255,255,.9);
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--fg);font:14px/1.5 "Segoe UI",system-ui,-apple-system,sans-serif;overflow-x:hidden;
+  background:linear-gradient(135deg,#fde3d6 0%,#f3d9ec 30%,#dcd6f7 60%,#c9d7fb 100%) fixed}
+.deco{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.deco i{position:absolute;border-radius:50%;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.95),rgba(255,255,255,.25) 45%,rgba(200,190,255,.25) 70%,rgba(255,255,255,.5));box-shadow:inset -6px -8px 18px rgba(150,130,230,.25),0 10px 30px rgba(140,110,220,.18)}
+.deco .cube{border-radius:14px;transform:rotate(28deg);background:linear-gradient(135deg,rgba(255,255,255,.85),rgba(210,200,255,.3));border:1px solid rgba(255,255,255,.9)}
+.deco .ring{background:none;border:10px solid rgba(255,255,255,.55);box-shadow:inset 0 0 12px rgba(150,130,230,.3),0 10px 30px rgba(140,110,220,.2)}
+.glass{background:var(--glass);border:1px solid var(--edge);border-radius:24px;backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);box-shadow:var(--shadow)}
+.frame{max-width:1320px;margin:28px auto;padding:22px;display:grid;grid-template-columns:76px minmax(0,1fr);gap:22px;border-radius:34px}
+aside{display:flex;flex-direction:column;gap:14px;align-items:center;padding:16px 0;border-radius:26px;align-self:start;position:sticky;top:24px}
+.nav-b{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;color:var(--sec);background:var(--glass-2);border:1px solid var(--edge);text-decoration:none;box-shadow:0 6px 14px -8px rgba(110,80,200,.4)}
+.nav-b svg{width:21px;height:21px}
+.nav-b.on{background:linear-gradient(135deg,#8b7cf8,#6a5cf0);color:#fff;border-color:transparent;box-shadow:0 10px 22px -8px rgba(110,90,240,.8)}
+.nav-b:hover:not(.on){color:var(--violet)}
+main{display:grid;gap:22px;min-width:0}
+.top{display:flex;gap:14px;align-items:center}
+.search{flex:1;max-width:420px;position:relative}
+.search input{width:100%;height:46px;border-radius:16px;border:1px solid var(--edge);background:var(--glass-2);padding:0 16px 0 44px;font:inherit;color:var(--fg);outline:none;box-shadow:var(--shadow)}
+.search input:focus{border-color:rgba(124,108,245,.6)}
+.search svg{position:absolute;left:15px;top:13px;width:19px;height:19px;color:var(--sec)}
+.results{position:absolute;top:52px;left:0;right:0;z-index:5;padding:6px;display:none}
+.results.show{display:block}
+.results button{display:flex;width:100%;gap:10px;align-items:center;text-align:left;border:0;background:none;padding:8px 10px;border-radius:10px;font:inherit;color:var(--fg);cursor:pointer}
+.results button:hover{background:var(--glass-2)}
+.results small{color:var(--sec);margin-left:auto;white-space:nowrap}
+.sp{flex:1}
+.bubble{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 30% 25%,#fff,rgba(255,255,255,.5) 60%,rgba(200,190,255,.5));border:1px solid var(--edge);box-shadow:0 10px 24px -10px rgba(110,80,200,.5);color:var(--violet);position:relative}
+.bubble svg{width:20px;height:20px}
+.bubble .dot{position:absolute;top:9px;right:10px;width:8px;height:8px;border-radius:50%;background:var(--pink);box-shadow:0 0 0 2px #fff}
+.datep{font-size:12.5px;color:var(--sec);padding:0 6px}
+.row1{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px}
+.welcome{padding:26px 28px 18px}
+.welcome-h{display:flex;align-items:flex-start;gap:12px}
+.welcome h1{margin:0;font-size:32px;font-weight:700;letter-spacing:-.6px;line-height:1.15}
+.welcome p{margin:6px 0 0;color:var(--sec)}
+.sel{border:1px solid var(--edge);background:var(--glass-2);border-radius:12px;padding:8px 12px;font:inherit;font-size:12.5px;color:var(--fg);box-shadow:0 6px 14px -8px rgba(110,80,200,.35)}
+.chart{position:relative;margin-top:16px;padding:14px 14px 4px;border-radius:20px;background:rgba(255,255,255,.35);border:1px solid var(--edge)}
+.chart svg{display:block;width:100%;height:230px;overflow:visible}
+.chart .xl{display:flex;justify-content:space-between;color:var(--sec);font-size:11.5px;padding:6px 4px 4px}
+.tip{position:absolute;transform:translate(-50%,-130%);background:#1f2147;color:#fff;font-size:12px;font-weight:600;padding:5px 10px;border-radius:9px;white-space:nowrap;pointer-events:none}
+.tip::after{content:"";position:absolute;left:50%;bottom:-5px;margin-left:-5px;border:5px solid transparent;border-bottom:0;border-top-color:#1f2147}
+.stats{display:grid;gap:18px;align-content:start}
+.stat{padding:20px;display:grid;grid-template-columns:52px minmax(0,1fr);gap:16px;align-items:center;position:relative;overflow:hidden}
+.stat::before{content:"";position:absolute;inset:0;opacity:.35;z-index:-1}
+.stat.v::before{background:linear-gradient(135deg,#c4b5fd,transparent 70%)}
+.stat.b::before{background:linear-gradient(135deg,#93c5fd,transparent 70%)}
+.stat.p::before{background:linear-gradient(135deg,#fda4af,#fdba74 40%,transparent 80%)}
+.ico{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;color:#fff;box-shadow:0 12px 22px -10px currentColor}
+.ico svg{width:24px;height:24px}
+.stat .lbl{font-size:12.5px;color:var(--sec)}
+.stat .val{font-size:30px;font-weight:700;letter-spacing:-.6px;line-height:1.15}
+.stat .hint{font-size:11.5px;color:var(--sec)}
+.row2{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:22px}
+.card{padding:22px 24px}
+.card-h{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.card-h h2{margin:0;font-size:16px;font-weight:600}
+.overview{display:grid;grid-template-columns:170px minmax(0,1fr);gap:22px;align-items:center}
+.donut{width:170px;height:170px;border-radius:50%;display:grid;place-items:center;position:relative}
+.donut::after{content:"";position:absolute;inset:22px;border-radius:50%;background:rgba(255,255,255,.75);box-shadow:inset 0 2px 8px rgba(110,80,200,.15)}
+.donut div{position:relative;z-index:1;text-align:center;line-height:1.1}
+.donut b{font-size:30px;letter-spacing:-.5px}.donut small{display:block;color:var(--sec);font-size:12px;margin-top:4px}
+.leg{display:grid}
+.leg div{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.leg div:last-child{border-bottom:0}
+.leg i{width:10px;height:10px;border-radius:50%}
+.leg span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.leg em{font-style:normal;color:var(--sec);font-size:12.5px}
+.bars{display:flex;align-items:flex-end;gap:12px;height:180px;padding:10px 4px 0;border-bottom:1px solid var(--line)}
+.bars div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;height:100%}
+.bars .b{width:100%;max-width:24px;border-radius:12px 12px 8px 8px;min-height:6px;box-shadow:0 8px 16px -8px currentColor}
+.bars em{font-style:normal;font-size:11.5px;color:var(--sec)}
+.xd{display:flex;gap:12px;padding:8px 4px 0}
+.xd span{flex:1;text-align:center;font-size:11.5px;color:var(--sec)}
+.xd span.t{color:var(--violet);font-weight:700}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px}
+.tile{padding:24px 16px 20px;text-align:center;text-decoration:none;color:var(--fg);transition:transform .2s}
+.tile:hover{transform:translateY(-3px)}
+.tile .ico{margin:0 auto 12px}
+.tile b{display:block;font-size:16px;font-weight:600}
+.tile small{color:var(--sec);font-size:12.5px}
+.row3{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:22px;align-items:start}
+.cal-head{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));text-align:center;color:var(--muted);font-size:11.5px;padding-bottom:8px}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.day{min-height:86px;border-radius:14px;padding:6px;display:flex;flex-direction:column;gap:4px;cursor:pointer;text-align:left;font:inherit;color:inherit;border:1px solid rgba(255,255,255,.6);background:rgba(255,255,255,.3)}
+.day:hover{background:rgba(255,255,255,.6)}
+.day.out{opacity:.4}
+.day .n{font-size:12px;color:var(--sec);width:24px;height:24px;display:grid;place-items:center;border-radius:50%}
+.day.today .n{background:linear-gradient(135deg,#8b7cf8,#6a5cf0);color:#fff;font-weight:700}
+.day.sel{border-color:var(--violet);box-shadow:0 0 0 2px rgba(124,108,245,.35)}
+.chip{font-size:10.5px;line-height:1.25;padding:4px 6px;border-radius:8px;color:#fff;overflow:hidden}
+.chip b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip.ev{background:linear-gradient(90deg,#f43f5e,#fb7185)!important}
+.chip.folga{background:rgba(255,255,255,.7)!important;color:var(--sec)}
+.chip.end{background:linear-gradient(90deg,#ef4444,#fb923c)!important}
+.mini{width:30px;height:30px;border-radius:10px;border:1px solid var(--edge);background:var(--glass-2);display:grid;place-items:center;cursor:pointer;color:var(--fg)}
+.mini svg{width:15px;height:15px}
+.task{display:flex;gap:10px;align-items:flex-start;padding:10px 2px;border-bottom:1px solid var(--line);font-size:13px}
+.task:last-child{border-bottom:0}
+.task input{appearance:none;width:20px;height:20px;border-radius:7px;border:1.5px solid rgba(124,108,245,.45);background:rgba(255,255,255,.7);flex:none;margin:0;cursor:pointer;display:grid;place-items:center}
+.task input:checked{background:linear-gradient(135deg,#8b7cf8,#6a5cf0);border-color:transparent}
+.task input:checked::after{content:"";width:9px;height:5px;border:2px solid #fff;border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px)}
+.task label{flex:1;cursor:pointer}
+.task.done label{color:var(--muted);text-decoration:line-through}
+.tag{font-size:10.5px;padding:3px 8px;border-radius:8px;white-space:nowrap;color:#fff;flex:none}
+.pill{font-size:12px;color:var(--sec);background:var(--glass-2);border:1px solid var(--edge);border-radius:999px;padding:4px 10px}
+.disc{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.disc:last-child{border-bottom:0}
+.disc .n{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px}
+.disc b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.disc small{color:var(--sec);font-size:11.5px}
+.disc .pct{text-align:right;font-size:12.5px;font-weight:600}
+.track{height:6px;border-radius:6px;background:rgba(124,108,245,.12);overflow:hidden;margin-top:6px}
+.track span{display:block;height:100%;border-radius:6px}
+.foot{color:var(--sec);font-size:11.5px;margin:0 6px}
+.empty{color:var(--sec);font-size:13px;padding:6px 0}
+@media (max-width:1100px){.row1,.row3{grid-template-columns:minmax(0,1fr)}.stats{grid-template-columns:repeat(3,minmax(0,1fr))}.row2{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:760px){
+  .frame{grid-template-columns:minmax(0,1fr);margin:10px;padding:12px;gap:14px;border-radius:26px}
+  aside{flex-direction:row;justify-content:space-around;position:static;padding:10px}
+  .nav-b{width:42px;height:42px}
+  main{gap:14px}
+  .datep,.bubble{display:none}
+  .search{max-width:none}
+  .top>.sp{display:none}
+  .welcome{padding:20px}.welcome h1{font-size:25px}.welcome-h{flex-direction:column}
+  .chart svg{height:170px}
+  .stats{grid-template-columns:minmax(0,1fr)}
+  .overview{grid-template-columns:minmax(0,1fr);justify-items:center}.leg{width:100%}
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .card{padding:18px}
+  .day{min-height:54px;padding:3px;border-radius:10px}.chip{font-size:0;padding:0;height:6px}.chip b{display:none}
+}
 </style>
 </head>
 <body>
-<main>
-<h1>Calendário de aulas — Pós em Georreferenciamento, Gestão Territorial e Geoprocessamento</h1>
-<p class="sub">Readequado em 23/11/2026 com os números do AVA: 163 aulas e 7 avaliações. Prazo final: 04/02/2027.</p>
-<div class="key">
-<span><span style="display:inline-block;width:10px;height:10px;border:1.5px solid var(--fg);border-radius:3px;vertical-align:-1px"></span> hoje</span>
-<span>dia sublinhado: avaliação</span>
-<span>cinza: folga</span>
+<div class="deco" aria-hidden="true">
+  <i class="cube" style="width:84px;height:84px;left:2%;top:52%"></i>
+  <i style="width:64px;height:64px;left:4%;top:66%"></i>
+  <i style="width:30px;height:30px;left:3.5%;top:79%"></i>
+  <i class="ring" style="width:110px;height:110px;right:2%;bottom:6%;transform:rotateX(55deg)"></i>
+  <i style="width:44px;height:44px;right:5%;top:9%"></i>
 </div>
-<div class="cal" id="cal"></div>
-<div class="lg" id="lg"></div>
-</main>
+
+<div class="frame glass">
+  <aside class="glass">
+    <a class="nav-b on" href="#inicio" title="Início" aria-label="Início"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.3 3.3a1 1 0 0 1 1.4 0l8 7.4A1 1 0 0 1 20 12.4h-1V20a1 1 0 0 1-1 1h-4v-6h-4v6H6a1 1 0 0 1-1-1v-7.6H4a1 1 0 0 1-.7-1.7z"/></svg></a>
+    <a class="nav-b" href="#atividade" title="Atividade" aria-label="Atividade"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="12" width="4" height="8" rx="1.5"/><rect x="10" y="5" width="4" height="15" rx="1.5"/><rect x="16" y="9" width="4" height="11" rx="1.5"/></svg></a>
+    <a class="nav-b" href="#calendario" title="Calendário" aria-label="Calendário"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg></a>
+    <a class="nav-b" href="#foco" title="Foco do dia" aria-label="Foco do dia"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6z"/></svg></a>
+    <a class="nav-b" href="#disciplinas" title="Disciplinas" aria-label="Disciplinas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a>
+  </aside>
+
+  <main>
+    <div class="top" id="inicio">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Buscar aula..." autocomplete="off" aria-label="Buscar aula">
+        <div class="results glass" id="res"></div>
+      </div>
+      <span class="sp"></span>
+      <span class="datep" id="hoje-txt"></span>
+      <span class="bubble" title="Avaliações pendentes"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 22a2.5 2.5 0 0 0 2.4-2h-4.8a2.5 2.5 0 0 0 2.4 2zm7-6V11a7 7 0 0 0-5.5-6.8V3.5a1.5 1.5 0 0 0-3 0v.7A7 7 0 0 0 5 11v5l-2 2v1h18v-1z"/></svg><span class="dot"></span></span>
+      <span class="bubble" title="Aluno"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6z"/></svg></span>
+    </div>
+
+    <div class="row1">
+      <section class="welcome glass">
+        <div class="welcome-h">
+          <div style="flex:1"><h1>Bem-vindo de volta!</h1><p>Aqui está o seu plano até o fim da pós</p></div>
+          <select class="sel" id="modo" aria-label="Período do gráfico"><option value="semana">Por semana</option><option value="dia">Próximos 14 dias</option></select>
+        </div>
+        <div class="chart" id="chart"><svg id="area" viewBox="0 0 600 230" preserveAspectRatio="none"></svg><div class="tip" id="tip"></div><div class="xl" id="xl"></div></div>
+      </section>
+
+      <div class="stats">
+        <div class="stat v glass"><span class="ico" style="background:linear-gradient(135deg,#a78bfa,#7c6cf5);color:#7c6cf5"><svg viewBox="0 0 24 24" fill="#fff"><rect x="4" y="12" width="4" height="8" rx="1.5"/><rect x="10" y="5" width="4" height="15" rx="1.5"/><rect x="16" y="9" width="4" height="11" rx="1.5"/></svg></span><div><div class="lbl">Aulas pendentes</div><div class="val" id="k-pend">–</div><div class="hint" id="k-pend-h"></div></div></div>
+        <div class="stat b glass"><span class="ico" style="background:linear-gradient(135deg,#60a5fa,#3b82f6);color:#3b82f6"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 10.4l3.2 1.9-.9 1.5L11 13V7h2z"/></svg></span><div><div class="lbl">Meta de hoje</div><div class="val" id="k-hoje">–</div><div class="hint" id="k-hoje-h"></div></div></div>
+        <div class="stat p glass"><span class="ico" style="background:linear-gradient(135deg,#fb7185,#fb923c);color:#fb7185"><svg viewBox="0 0 24 24" fill="#fff"><path d="M5 21V4h11l-2 4 2 4H7v9z"/></svg></span><div><div class="lbl">Dias até o prazo</div><div class="val" id="k-prazo">–</div><div class="hint">Fim do curso em 04/02/2027</div></div></div>
+      </div>
+    </div>
+
+    <div class="row2" id="atividade">
+      <section class="card glass">
+        <div class="card-h"><h2>Visão geral do plano</h2></div>
+        <div class="overview">
+          <div class="donut" id="donut"><div><b id="d-pct">0%</b><small>concluído</small></div></div>
+          <div class="leg" id="leg"></div>
+        </div>
+      </section>
+      <section class="card glass">
+        <div class="card-h"><h2>Atividade da semana</h2><span class="sp"></span><span class="pill" id="sem-tot"></span></div>
+        <div class="bars" id="bars"></div><div class="xd" id="xd"></div>
+      </section>
+    </div>
+
+    <div class="tiles">
+      <a class="tile glass" href="#calendario"><span class="ico" style="background:linear-gradient(135deg,#a78bfa,#7c6cf5);color:#7c6cf5"><svg viewBox="0 0 24 24" fill="#fff"><path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2zm-2 8v9h14v-9z"/></svg></span><b>Calendário</b><small>Plano dia a dia</small></a>
+      <a class="tile glass" href="#foco"><span class="ico" style="background:linear-gradient(135deg,#60a5fa,#3b82f6);color:#3b82f6"><svg viewBox="0 0 24 24" fill="#fff"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg></span><b>Foco do dia</b><small>Aulas de hoje</small></a>
+      <a class="tile glass" href="#disciplinas"><span class="ico" style="background:linear-gradient(135deg,#f472b6,#ec4899);color:#ec4899"><svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="9" fill="none" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="5" fill="none" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="1.6"/></svg></span><b>Disciplinas</b><small>Progresso de cada uma</small></a>
+      <a class="tile glass" href="https://infoprod.platosedu.io/v2/lms/aluno" target="_blank" rel="noopener"><span class="ico" style="background:linear-gradient(135deg,#fdba74,#fb923c);color:#fb923c"><svg viewBox="0 0 24 24" fill="#fff"><path d="M14 3h7v7h-2V6.4l-9.3 9.3-1.4-1.4L17.6 5H14zM5 5h6v2H5v12h12v-6h2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg></span><b>Abrir o AVA</b><small>Assistir às aulas</small></a>
+    </div>
+
+    <div class="row3">
+      <section class="card glass" id="calendario">
+        <div class="card-h">
+          <h2>Calendário</h2>
+          <button class="mini" id="prev" aria-label="Mês anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <span id="mes" style="min-width:128px;text-align:center;font-size:13px;text-transform:capitalize"></span>
+          <button class="mini" id="next" aria-label="Próximo mês"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg></button>
+        </div>
+        <div class="cal-head"><span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span></div>
+        <div class="cal" id="cal"></div>
+      </section>
+      <div style="display:grid;gap:22px">
+        <section class="card glass" id="foco">
+          <div class="card-h"><h2 id="foco-t">Foco de hoje</h2><span class="sp"></span><span class="pill" id="foco-c"></span></div>
+          <div id="focus"></div>
+        </section>
+        <section class="card glass" id="disciplinas">
+          <div class="card-h"><h2>Disciplinas</h2></div>
+          <div id="discs"></div>
+        </section>
+      </div>
+    </div>
+    <p class="foot">Aulas pendentes lidas do AVA em 23/11/2026. As marcações ficam salvas só neste navegador.</p>
+  </main>
+</div>
+
 <script>
-const B=[["Cartografia, Geodésia e Projeções","2026-11-23","2026-11-27",13],["Reurb","2026-11-28","2026-12-06",24],["Aerofotogrametria com Drones","2026-12-07","2026-12-14",21],["Métodos, Medidas e Ajustamento","2026-12-15","2026-12-23",25],["Topografia Aplicada","2026-12-24","2027-01-03",30],["Direito Ambiental","2027-01-04","2027-01-12",24],["Licenciamento Ambiental","2027-01-13","2027-01-22",26]];
-const C=[["var(--a-bg)","var(--a-fg)"],["var(--b-bg)","var(--b-fg)"]];
+const DATA=[["Cartografia, Geodésia e Projeções",16,3,["MÓDULO 01 - AULA 1-2","MÓDULO 01 - AULA 1-3","MÓDULO 01 - AULA 1-4","MÓDULO 02 - AULA 2-2","MÓDULO 02 - AULA 2-3","MÓDULO 02 - AULA 2-4","MÓDULO 02 - AULA 2-5","MÓDULO 03 - AULA 3-1","MÓDULO 03 - AULA 3-2","MÓDULO 03 - AULA 3-3","MÓDULO 04 - AULA 4-1 - PROJEÇÕES","MÓDULO 04 - AULA 4-2 - EPSG","MÓDULO 04 - AULA 4-3 - MAPA"]],["Reurb",25,1,["MÓDULO 01 - AULA 01 - INTRODUÇÃO À REURB","MÓDULO 01 - AULA 02 - CONCEITOS FUNDAMENTAIS","MÓDULO 02 - AULA 03 - BASE LEGAL E NORMATIVA DA REURB","MÓDULO 02 - AULA 04 - AS MODALIDADES DA REURB","MÓDULO 03 - AULA 05 - O FLUXO COMPLETO DA REURB","MÓDULO 03 - AULA 06 - GEOTECNOLOGIAS APLICADAS À REURB","MÓDULO 04 - AULA 07 - SITUAÇÕES ESPECIAIS NA REURB","MÓDULO 04 - 1. MEMORIAL DESCRITIVO DE UM LOTE – EXEMPLO PRÁTICO DO ZERO","MÓDULO 04 - 2. MEMORIAL DESCRITIVO PARA REURB – EXEMPLO COMPLETO IMPORTANDO","MÓDULO 04 - 3. INSUMOS PARA PROJETO DE REURB NO QGIS","MÓDULO 04 - 4. MÉTODO TRADICIONAL DE CRIAR CAMADAS EM GEOPACKAGE NO QGIS","MÓDULO 04 - 5. MÉTODO PRÁTICO PARA CRIAR CAMADAS COM IA E PYTHON NO QGIS","MÓDULO 04 - 6. DIGITALIZAÇÃO DE LOTES PARTIR DE ORTOMOSAICO - TÉCNICA DO RECORTE","MÓDULO 04 - 7. DIGITALIZAÇÃO DE EDIFICAÇÕES COM ÂNGULOS RETOS","MÓDULO 04 - 8. IMPORTAÇÃO DE LOTES EM ARQUIVO CAD DWG OU DXF NO QGIS","MÓDULO 04 - 9. GERAR LOTES A PARTIR DE GRADE REGULAR (RETÂNGULOS)","MÓDULO 04 - 10. REGRAS DE VALIDAÇÃO TOPOLÓGICA PARA REURB","MÓDULO 04 - 11. CORREÇÃO MANUAL DE ERROS TOPOLÓGICOS NA CAMADA LOTE","MÓDULO 04 - 12. AUTOMATIZAÇÃO DA LIMPEZA E CORREÇÃO TOPOLÓGICA DE LOTES","MÓDULO 04 - 13. ORIENTAR POLÍGONOS COM PRIMEIRO VÉRTICE CONFRONTANDO SISTEM","MÓDULO 04 - 14. COMO DEFINIR A COORDENADA Z DOS LOTES A PARTIR DO MDT","MÓDULO 04 - 15. GERAÇÃO DAS QUADRAS A PARTIR DOS LOTES","MÓDULO 04 - 16. REVISÃO DAS AULAS PRÁTICAS DE REURB NO QGIS","MÓDULO 04 - 17. PRÓXIMOS PASSOS PARA AUTOMATIZAÇÃO COM O MODELO GEOURBANO"]],["Aerofotogrametria com Drones",27,6,["MÓDULO 02 - 2.1 FUNDAMENTOS DO SENSORIAMENTO REMOTO","MÓDULO 02 - 2.2 INTERAÇÃO DA RADIAÇÃO ELETROMAGNÉTICA COM OS ALVOS TERRESTRES","MÓDULO 02 - 2.3 COMPORTAMENTO ESPECTRAL DOS ALVOS","MÓDULO 02 - 2.4 SENSORES APLICADOS AOS UAS","MÓDULO 03 - 3.1 GEOMETRIA DA CÂMERA E IMAGEAMENTO AÉREO","MÓDULO 03 - 3.2 GEOMETRIA DO SENSOR, FOOTPRINT E GSD","MÓDULO 03 - 3.3 ESTEREOSCOPIA E RECONSTRUÇÃO TRIDIMENSIONAL","MÓDULO 03 - 3.4 VELOCIDADE IDEAL DO DRONE PARA AEROFOTOGRAMETRIA","MÓDULO 03 - 3.5 CALIBRAÇÃO E ORIENTAÇÃO FOTOGRAMÉTRICA","MÓDULO 04 - 4.1 PLANEJAMENTO DE VOO FOTOGRAMÉTRICO","MÓDULO 04 - 4.3 SEGURANÇA OPERACIONAL COM UAS","MÓDULO 04 - 4.4 LEGISLAÇÃO E NORMAS PARA USO DE DRONES NO BRASIL","MÓDULO 05 - 5.1 FLUXO DE PROCESSAMENTO FOTOGRAMÉTRICO E INSTALAÇÃO DO WEBODM","MÓDULO 05 - 5.2 BAIXAR DADOS E ROTEIRO DAS PRÁTICAS","MÓDULO 05 - 5.3 CARREGAMENTO E ANÁLISE DE FOTOS DE DRONE NO QGIS","MÓDULO 05 - 5.4 DICAS DE PROCESSAMENTO RÁPIDO NO WEBODM","MÓDULO 05 - 5.5 PROCESSAMENTO PADRÃO E ANÁLISE DOS PRODUTOS FOTOGRAMÉTRICOS","MÓDULO 06 - 6.1 CONTROLE DE QUALIDADE, RMSE E PEC-PCD","MÓDULO 06 - 6.2 EXEMPLO 1 - AVALIAÇÃO DE ACURÁCIA POSICIONAL 3D","MÓDULO 06 - 6.3 EXEMPLO 2 - AVALIAÇÃO DE ACURÁCIA POSICIONAL 3D","MÓDULO 06 - 6.4 ACURÁCIA POSICIONAL DE AEROLEVANTAMENTO COM PPK"]],["Métodos, Medidas e Ajustamento",28,3,["MÓDULO 02 - AULA 01","MÓDULO 02 - AULA 02","MÓDULO 02 - AULA 03","MÓDULO 02 - AULA 04","MÓDULO 02 - AULA 05","MÓDULO 02 - AULA 06","MÓDULO 02 - AULA 07","MÓDULO 02 - AULA 08","MÓDULO 02 - AULA 09","MÓDULO 02 - AULA 10","MÓDULO 02 - AULA 11","MÓDULO 02 - AULA 12","MÓDULO 02 - AULA 13","MÓDULO 02 - AULA 14","MÓDULO 02 - AULA 15","MÓDULO 02 - AULA 16","MÓDULO 02 - AULA 17","MÓDULO 02 - AULA 18","MÓDULO 02 - AULA 19","MÓDULO 02 - AULA 20","MÓDULO 02 - AULA 21","MÓDULO 02 - AULA 22","MÓDULO 02 - AULA 23","MÓDULO 02 - AULA 24","MÓDULO 02 - AULA 25"]],["Topografia Aplicada",31,2,["MÓDULO 02 - 1.1 UNIDADES DE MEDIDA","MÓDULO 02 - 1.2 ESCALAS","MÓDULO 02 - 1.3 MEDIÇÕES ANGULARES NA TOPOGRAFIA","MÓDULO 02 - 1.4 CÁLCULO DE AZIMUTES E DISTÂNCIAS","MÓDULO 02 - 1.5 CÁLCULO ANALÍTICO DE ÁREA","MÓDULO 02 - 1.6 REVISÃO DE TRIGONOMETRIA PARA TOPOGRAFIA","MÓDULO 03 - 2.1 INSTRUMENTOS TOPOGRÁFICOS","MÓDULO 03 - 2.2 TÉCNICAS DE LEVANTAMENTO TOPOGRÁFICO","MÓDULO 03 - 2.3 DETERMINAÇÃO DE COORDENADAS","MÓDULO 03 - 2.4 SISTEMAS LOCAIS (SGL E STL)","MÓDULO 03 - 2.5 LEVANTAMENTO COM ESTAÇÃO TOTAL","MÓDULO 03 - 2.6 POSICIONAMENTO POR GEOMETRIA ANALÍTICA","MÓDULO 04 - 3.1 FORMA DA TERRA E DATUM GEODÉSICO","MÓDULO 04 - 3.2 PROJEÇÕES CARTOGRÁFICAS","MÓDULO 04 - 3.3 SISTEMA UTM DE PROJEÇÃO","MÓDULO 04 - 3.4 SISTEMAS DE REFERÊNCIA DE COORDENADAS","MÓDULO 04 - 3.5 FATOR DE ESCALA (K)","MÓDULO 04 - 3.6 OS DIFERENTES TIPOS DE NORTE","MÓDULO 05 - 4.1 INTRODUÇÃO AOS MANUAIS E NORMAS TÉCNICAS PARA TOPOGRAFIA","MÓDULO 05 - 4.2 MANUAL TÉCNICO PARA GEORREFERENCIAMENTO DE IMÓVEIS RURAIS","MÓDULO 05 - 4.3 MANUAL PARA GESTÃO DA CERTIFICAÇÃO (INCRA)","MÓDULO 05 - 4.4 ABNT NBR 13133 — EXECUÇÃO DE LEVANTAMENTO TOPOGRÁFICO","MÓDULO 05 - 4.5 ABNT NBR 14166 — REDE DE REFERÊNCIA CADASTRAL MUNICIPAL (RRCM)","MÓDULO 05 - 4.6 ABNT NBR 17047 — LEVANTAMENTO CADASTRAL TERRITORIAL PARA REGISTRO PÚBLICO","MÓDULO 06 - 5.1 PRODUTOS TOPOGRÁFICOS DO GEORREFERENCIAMENTO","MÓDULO 06 - 5.2 GEOINCRA NO QGIS — AUTOMAÇÃO DO GEORREFERENCIAMENTO PARA O SIGEF","MÓDULO 07 - 6.1 INTRODUÇÃO À ALTIMETRIA E DEFINIÇÕES DE ALTITUDE","MÓDULO 07 - 6.2 NIVELAMENTO GEOMÉTRICO × TRIGONOMÉTRICO E GNSS","MÓDULO 07 - 6.3 MODELOS DIGITAIS DE ELEVAÇÃO (MDE)"]],["Direito Ambiental",25,1,["MÓDULO 01 - RECURSOS NATURAIS: A POLÍTICA NACIONAL DE MEIO AMBIENTE E A RESPONSABILIDADE AMBIENTAL","MÓDULO 01 - RECURSOS NATURAIS: A POLÍTICA NACIONAL DE MEIO AMBIENTE E A RESPONSABILIDADE AMBIENTAL","MÓDULO 01 - RECURSOS NATURAIS: A POLÍTICA NACIONAL DE MEIO AMBIENTE E A RESPONSABILIDADE AMBIENTAL","MÓDULO 01 - RECURSOS NATURAIS: A POLÍTICA NACIONAL DE MEIO AMBIENTE E A RESPONSABILIDADE AMBIENTAL","MÓDULO 01 - RECURSOS NATURAIS: A POLÍTICA NACIONAL DE MEIO AMBIENTE E A RESPONSABILIDADE AMBIENTAL","MÓDULO 02 - COBERTURA FLORESTAL E SISTEMA NACIONAL DE GERENCIAMENTO DE RECURSOS HÍDRICOS","MÓDULO 02 - COBERTURA FLORESTAL E SISTEMA NACIONAL DE GERENCIAMENTO DE RECURSOS HÍDRICOS","MÓDULO 02 - COBERTURA FLORESTAL E SISTEMA NACIONAL DE GERENCIAMENTO DE RECURSOS HÍDRICOS","MÓDULO 02 - COBERTURA FLORESTAL E SISTEMA NACIONAL DE GERENCIAMENTO DE RECURSOS HÍDRICOS","MÓDULO 02 - COBERTURA FLORESTAL E SISTEMA NACIONAL DE GERENCIAMENTO DE RECURSOS HÍDRICOS","MÓDULO 03 - POLÍTICA NACIONAL DE GERENCIAMENTO DE RESÍDUOS SÓLIDOS","MÓDULO 03 - POLÍTICA NACIONAL DE GERENCIAMENTO DE RESÍDUOS SÓLIDOS","MÓDULO 03 - POLÍTICA NACIONAL DE GERENCIAMENTO DE RESÍDUOS SÓLIDOS","MÓDULO 03 - POLÍTICA NACIONAL DE GERENCIAMENTO DE RESÍDUOS SÓLIDOS","MÓDULO 03 - POLÍTICA NACIONAL DE GERENCIAMENTO DE RESÍDUOS SÓLIDOS","MÓDULO 04 - LICENCIAMENTO AMBIENTAL, UNIDADES DE CONSERVAÇÃO, QUESTÕES CLIMÁTICAS E ZONEAMENTO","MÓDULO 04 - LICENCIAMENTO AMBIENTAL, UNIDADES DE CONSERVAÇÃO, QUESTÕES CLIMÁTICAS E ZONEAMENTO","MÓDULO 04 - LICENCIAMENTO AMBIENTAL, UNIDADES DE CONSERVAÇÃO, QUESTÕES CLIMÁTICAS E ZONEAMENTO","MÓDULO 04 - LICENCIAMENTO AMBIENTAL, UNIDADES DE CONSERVAÇÃO, QUESTÕES CLIMÁTICAS E ZONEAMENTO","MÓDULO 04 - LICENCIAMENTO AMBIENTAL, UNIDADES DE CONSERVAÇÃO, QUESTÕES CLIMÁTICAS E ZONEAMENTO","Podcast: PODCAST 01","Podcast: PODCAST 02","Podcast: PODCAST 03","Podcast: PODCAST 04"]],["Licenciamento Ambiental",26,0,["MÓDULO 01 - CONTEXTO E EVOLUÇÃO HISTÓRICA NO BRASIL","MÓDULO 01 - CONTEXTO E EVOLUÇÃO HISTÓRICA NO BRASIL","MÓDULO 01 - CONTEXTO E EVOLUÇÃO HISTÓRICA NO BRASIL","MÓDULO 01 - CONTEXTO E EVOLUÇÃO HISTÓRICA NO BRASIL","MÓDULO 01 - CONTEXTO E EVOLUÇÃO HISTÓRICA NO BRASIL","MÓDULO 02 - LEGISLAÇÃO APLICÁVEL AO LICENCIAMENTO AMBIENTAL E MODELOS DE LICENCIAMENTO NO BRASIL","MÓDULO 02 - LEGISLAÇÃO APLICÁVEL AO LICENCIAMENTO AMBIENTAL E MODELOS DE LICENCIAMENTO NO BRASIL","MÓDULO 02 - LEGISLAÇÃO APLICÁVEL AO LICENCIAMENTO AMBIENTAL E MODELOS DE LICENCIAMENTO NO BRASIL","MÓDULO 02 - LEGISLAÇÃO APLICÁVEL AO LICENCIAMENTO AMBIENTAL E MODELOS DE LICENCIAMENTO NO BRASIL","MÓDULO 02 - LEGISLAÇÃO APLICÁVEL AO LICENCIAMENTO AMBIENTAL E MODELOS DE LICENCIAMENTO NO BRASIL","MÓDULO 03 - AVALIAÇÃO DE RISCOS E DEFINIÇÃO DE COMPETÊNCIA NO LICENCIAMENTO AMBIENTAL","MÓDULO 03 - AVALIAÇÃO DE RISCOS E DEFINIÇÃO DE COMPETÊNCIA NO LICENCIAMENTO AMBIENTAL","MÓDULO 03 - AVALIAÇÃO DE RISCOS E DEFINIÇÃO DE COMPETÊNCIA NO LICENCIAMENTO AMBIENTAL","MÓDULO 03 - AVALIAÇÃO DE RISCOS E DEFINIÇÃO DE COMPETÊNCIA NO LICENCIAMENTO AMBIENTAL","MÓDULO 03 - AVALIAÇÃO DE RISCOS E DEFINIÇÃO DE COMPETÊNCIA NO LICENCIAMENTO AMBIENTAL","MÓDULO 04 - ESTUDOS E PROGRAMAS AMBIENTAIS","MÓDULO 04 - ESTUDOS E PROGRAMAS AMBIENTAIS","MÓDULO 04 - ESTUDOS E PROGRAMAS AMBIENTAIS","MÓDULO 04 - ESTUDOS E PROGRAMAS AMBIENTAIS","MÓDULO 04 - ESTUDOS E PROGRAMAS AMBIENTAIS","Podcast: PODCAST 01","Podcast: PODCAST 02","Podcast: PODCAST 03","SAIBA MAIS NA PRÁTICA - PERGUNTAS E RESPOSTAS","Podcast: PODCAST 04","AULA AO VIVO - Estudo de caso - Licenciamento ambiental"]]];
+const PLAN=[["2026-11-23","2026-11-27"],["2026-11-28","2026-12-06"],["2026-12-07","2026-12-14"],["2026-12-15","2026-12-23"],["2026-12-24","2027-01-03"],["2027-01-04","2027-01-12"],["2027-01-13","2027-01-22"]];
+const COLORS=["#7c6cf5","#4f9cf9","#14b8a6","#a78bfa","#fb923c","#22c55e","#f06aa8"];
+const SHORT=["Cartografia","Reurb","Drones","Métodos e Ajust.","Topografia","Direito Amb.","Licenciamento"];
+const FOLGA=["2027-01-23","2027-02-03"],END="2027-02-04";
 const P=s=>{const[a,b,c]=s.split("-").map(Number);return new Date(a,b-1,c)};
-const now=new Date(),T=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-const F0=P("2027-01-23"),F1=P("2027-02-03"),END=P("2027-02-04");
-const key=d=>d.toDateString();const info={};
-B.forEach((b,i)=>{const s=P(b[1]),e=P(b[2]);for(let d=new Date(s);d<=e;d.setDate(d.getDate()+1))info[key(d)]={i,ev:key(d)===key(e)}});
-const fmt=d=>d.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"});
-const cal=document.getElementById("cal");
-[[2026,10],[2026,11],[2027,0],[2027,1]].forEach(([y,m])=>{
- const first=new Date(y,m,1),n=new Date(y,m+1,0).getDate();
- let h=`<div class="m"><h2>${first.toLocaleDateString("pt-BR",{month:"long",year:"numeric"})}</h2><div class="g">`+["D","S","T","Q","Q","S","S"].map(x=>`<span class="wd">${x}</span>`).join("");
- for(let k=0;k<first.getDay();k++)h+="<span></span>";
- for(let d=1;d<=n;d++){const dt=new Date(y,m,d),f=info[key(dt)];let st="";
-  if(f){const c=C[f.i%2];st=`background:${c[0]};color:${c[1]};`+(f.ev?"text-decoration:underline;font-weight:500;":"")}
-  else if(dt>=F0&&dt<=F1)st="background:var(--n-bg);color:var(--sec);";
-  else if(key(dt)===key(END))st="background:var(--r-bg);color:var(--r-fg);font-weight:500;";
-  else st="color:var(--muted);";
-  if(key(dt)===key(T))st+="outline:1.5px solid var(--fg);outline-offset:-1.5px;";
-  h+=`<span style="${st}" title="${f?B[f.i][0]+(f.ev?" — avaliação":""):""}">${d}</span>`}
- cal.insertAdjacentHTML("beforeend",h+"</div></div>")});
-const lg=document.getElementById("lg");
-B.forEach((b,i)=>{const s=P(b[1]),e=P(b[2]),days=Math.round((e-s)/864e5)+1,cur=T>=s&&T<=e;
- lg.insertAdjacentHTML("beforeend",`<div class="${cur?"now":""}"><span class="sw" style="background:${C[i%2][0]}"></span><span style="flex:1">${b[0]}</span><span class="r">${fmt(s)}–${fmt(e)} · ${b[3]} aulas · ${(b[3]/days).toFixed(1).replace(".",",")}/dia</span></div>`)});
-lg.insertAdjacentHTML("beforeend",`<div><span class="sw" style="background:var(--n-bg)"></span><span style="flex:1">Folga</span><span class="r">23/01–03/02 · 12 dias</span></div><div><span class="sw" style="background:var(--r-bg)"></span><span style="flex:1">Prazo final do curso</span><span style="color:var(--r-fg)">04/02/2027</span></div>`);
+const K=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const fmt=(d,o={day:"2-digit",month:"2-digit"})=>d.toLocaleDateString("pt-BR",o);
+const add=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const now=new Date(),TODAY=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+const store=JSON.parse(localStorage.getItem("pos-feitas")||"{}");
+const save=()=>localStorage.setItem("pos-feitas",JSON.stringify(store));
+const isDone=id=>!!store[id];
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const days={},lessons=[];
+DATA.forEach(([nome,total,feitas,pend],i)=>{
+  const s=P(PLAN[i][0]),e=P(PLAN[i][1]),n=Math.round((e-s)/864e5)+1,base=Math.floor(pend.length/n),extra=pend.length%n;
+  let idx=0;
+  for(let k=0;k<n;k++){
+    const d=add(s,k),q=base+(k<extra?1:0);
+    const items=pend.slice(idx,idx+q).map((t,j)=>({t,id:`${i}:${idx+j}`,i,k:K(d)}));idx+=q;
+    days[K(d)]={i,items,ev:k===n-1};lessons.push(...items);
+  }
+});
+
+let sel=new Date(TODAY),view=new Date(TODAY.getFullYear(),TODAY.getMonth(),1);
+
+function smooth(pts){
+  let d=`M${pts[0][0]},${pts[0][1]}`;
+  for(let i=0;i<pts.length-1;i++){const[x0,y0]=pts[i],[x1,y1]=pts[i+1],cx=(x0+x1)/2;d+=` C${cx},${y0} ${cx},${y1} ${x1},${y1}`}
+  return d;
+}
+function renderChart(){
+  const modo=document.getElementById("modo").value;let series=[];
+  if(modo==="semana"){
+    let s=add(P(PLAN[0][0]),-P(PLAN[0][0]).getDay());
+    while(s<=P(END)){const w=[...Array(7)].map((_,j)=>add(s,j));
+      series.push({lbl:fmt(w[0]),v:w.reduce((a,d)=>a+(days[K(d)]?.items.length||0),0),cur:w.some(d=>K(d)===K(TODAY)),k:K(w[0])});s=add(s,7)}
+  }else{
+    for(let j=0;j<14;j++){const d=add(TODAY,j);series.push({lbl:fmt(d,{weekday:"short"}).replace(".",""),v:days[K(d)]?.items.length||0,cur:j===0,k:K(d)})}
+  }
+  const W=600,H=230,top=34,mx=Math.max(...series.map(s=>s.v),1),stepX=W/(series.length-1);
+  const mn=Math.min(...series.map(s=>s.v))*.6,rg=Math.max(mx-mn,1);
+  const pts=series.map((s,j)=>[j*stepX,H-8-((s.v-mn)/rg)*(H-top-8)]);
+  const line=smooth(pts),area=line+` L${W},${H} L0,${H} Z`;
+  const ci=Math.max(0,series.findIndex(s=>s.cur));
+  document.getElementById("area").innerHTML=`<defs>
+    <linearGradient id="lg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7c6cf5"/><stop offset=".55" stop-color="#4f9cf9"/><stop offset="1" stop-color="#f06aa8"/></linearGradient>
+    <linearGradient id="fg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8b7cf8" stop-opacity=".55"/><stop offset="1" stop-color="#c4b5fd" stop-opacity=".05"/></linearGradient>
+    <filter id="gl" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    ${[0,1,2,3,4,5].map(g=>`<line x1="${g*W/5}" x2="${g*W/5}" y1="0" y2="${H}" stroke="rgba(120,100,190,.12)"/>`).join("")}
+    <path d="${area}" fill="url(#fg)"/><path d="${line}" fill="none" stroke="url(#lg)" stroke-width="5" stroke-linecap="round" filter="url(#gl)" vector-effect="non-scaling-stroke"/>`;
+  const box=document.getElementById("area").getBoundingClientRect(),[cx,cy]=pts[ci];
+  const tip=document.getElementById("tip");
+  tip.style.left=(14+cx/W*box.width)+"px";tip.style.top=(14+cy/H*box.height)+"px";
+  tip.textContent=`${modo==="semana"?"Esta semana":"Hoje"}: ${series[ci].v} aulas`;
+  const cw=document.getElementById("chart").clientWidth,tw=tip.offsetWidth/2+6,tx=Math.min(Math.max(14+cx/W*box.width,tw),cw-tw);tip.style.left=tx+"px";
+  let dot=document.getElementById("cdot");if(!dot){dot=document.createElement("span");dot.id="cdot";document.getElementById("chart").appendChild(dot)}
+  dot.style.cssText=`position:absolute;left:${14+cx/W*box.width}px;top:${14+cy/H*box.height}px;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#fff;border:3px solid #6a5cf0;box-shadow:0 0 0 5px rgba(124,108,245,.25)`;
+  const xl=document.getElementById("xl"),stepL=Math.ceil(series.length/7);
+  xl.innerHTML=series.filter((_,j)=>j%stepL===0).map(s=>`<span>${s.lbl}</span>`).join("");
+}
+function chipFor(d){
+  const k=K(d),x=days[k];
+  if(x){const left=x.items.filter(a=>!isDone(a.id)).length;
+    return `<div class="chip" style="background:${COLORS[x.i]}"><b>${SHORT[x.i]}</b>${x.items.length} aula${x.items.length>1?"s":""}${left===0?" ✓":""}</div>`+(x.ev?`<div class="chip ev"><b>Avaliação</b></div>`:"")}
+  if(k>=FOLGA[0]&&k<=FOLGA[1])return `<div class="chip folga"><b>Folga</b></div>`;
+  if(k===END)return `<div class="chip end"><b>Prazo final</b></div>`;
+  return "";
+}
+function renderCal(){
+  document.getElementById("mes").textContent=view.toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
+  const start=add(view,-view.getDay());let h="";
+  for(let c=0;c<42;c++){const d=add(start,c);if(c===35&&d.getMonth()!==view.getMonth())break;
+    h+=`<button class="day ${d.getMonth()!==view.getMonth()?"out":""} ${K(d)===K(TODAY)?"today":""} ${K(d)===K(sel)?"sel":""}" data-k="${K(d)}" aria-label="${fmt(d,{day:"numeric",month:"long"})}"><span class="n">${d.getDate()}</span>${chipFor(d)}</button>`}
+  const cal=document.getElementById("cal");cal.innerHTML=h;
+  cal.querySelectorAll(".day").forEach(b=>b.onclick=()=>{sel=P(b.dataset.k);renderAll()});
+}
+function renderFocus(){
+  const x=days[K(sel)];
+  document.getElementById("foco-t").textContent=K(sel)===K(TODAY)?"Foco de hoje":"Foco de "+fmt(sel,{weekday:"short",day:"2-digit",month:"2-digit"});
+  const box=document.getElementById("focus"),c=document.getElementById("foco-c");
+  if(!x){box.innerHTML=`<div class="empty">Nenhuma aula planejada para este dia.</div>`;c.textContent="";return}
+  c.textContent=`${x.items.filter(a=>isDone(a.id)).length}/${x.items.length}`;
+  box.innerHTML=x.items.map(a=>`<div class="task ${isDone(a.id)?"done":""}"><input type="checkbox" id="t${a.id}" data-id="${a.id}" ${isDone(a.id)?"checked":""}><label for="t${a.id}">${esc(a.t)}</label><span class="tag" style="background:${COLORS[x.i]}">${SHORT[x.i]}</span></div>`).join("")+(x.ev?`<div class="task"><span class="tag" style="background:linear-gradient(90deg,#f43f5e,#fb7185)">Avaliação</span><label>Avaliação virtual de ${DATA[x.i][0]}</label></div>`:"");
+  box.querySelectorAll("input").forEach(cb=>cb.onchange=()=>{if(cb.checked)store[cb.dataset.id]=1;else delete store[cb.dataset.id];save();renderAll()});
+}
+function discProg(i){const[nome,total,feitas,pend]=DATA[i];return feitas+pend.filter((_,j)=>isDone(`${i}:${j}`)).length}
+function renderStats(){
+  const done=lessons.filter(a=>isDone(a.id)).length;
+  document.getElementById("k-pend").textContent=lessons.length-done;
+  document.getElementById("k-pend-h").textContent=done?`↓ ${done} marcada${done>1?"s":""} como feita${done>1?"s":""}`:"em 7 disciplinas";
+  const t=days[K(TODAY)];
+  document.getElementById("k-hoje").textContent=t?`${t.items.filter(a=>isDone(a.id)).length}/${t.items.length}`:"0";
+  document.getElementById("k-hoje-h").textContent=t?`${DATA[t.i][0].split(",")[0]}${t.ev?" · avaliação":""}`:"Sem aulas hoje";
+  document.getElementById("k-prazo").textContent=Math.max(0,Math.round((P(END)-TODAY)/864e5));
+  const tot=DATA.reduce((s,d)=>s+d[1],0),feit=DATA.reduce((s,_,i)=>s+discProg(i),0),pct=Math.round(feit/tot*100);
+  document.getElementById("d-pct").textContent=pct+"%";
+  let acc=0;const segs=DATA.map((d,i)=>{const a=acc,b=acc+discProg(i)/tot*100;acc=b;return `${COLORS[i]} ${a}% ${b}%`});
+  document.getElementById("donut").style.background=`conic-gradient(${segs.join(",")},rgba(124,108,245,.14) ${acc}% 100%)`;
+  document.getElementById("leg").innerHTML=DATA.map((d,i)=>`<div><i style="background:${COLORS[i]}"></i><span title="${d[0]}">${SHORT[i]}</span><em>${Math.round(discProg(i)/d[1]*100)}%</em></div>`).join("");
+  document.getElementById("discs").innerHTML=DATA.map(([nome,total],i)=>{const f=discProg(i),p=Math.round(f/total*100);
+    return `<div class="disc"><span class="n" style="background:${COLORS[i]}">${i+1}</span><div style="min-width:0"><b title="${nome}">${nome}</b><small>${fmt(P(PLAN[i][0]))} a ${fmt(P(PLAN[i][1]))} · ${f}/${total}</small><div class="track"><span style="width:${p}%;background:${COLORS[i]}"></span></div></div><div class="pct">${p}%</div></div>`}).join("");
+}
+function renderBars(){
+  const w=[...Array(7)].map((_,j)=>add(sel,j-sel.getDay())),vals=w.map(d=>days[K(d)]?.items.length||0),mx=Math.max(4,...vals);
+  document.getElementById("sem-tot").textContent=`${vals.reduce((a,b)=>a+b,0)} aulas · ${fmt(w[0])} a ${fmt(w[6])}`;
+  document.getElementById("bars").innerHTML=w.map((d,j)=>{const x=days[K(d)],c=x?COLORS[x.i]:"#d6d0ee";
+    return `<div><em>${vals[j]||""}</em><span class="b" style="height:${vals[j]/mx*100}%;background:linear-gradient(180deg,${c},${c}99);color:${c}"></span></div>`}).join("");
+  document.getElementById("xd").innerHTML=w.map(d=>`<span class="${K(d)===K(TODAY)?"t":""}">${fmt(d,{weekday:"short"}).replace(".","")}</span>`).join("");
+}
+function renderAll(){
+  if(sel.getMonth()!==view.getMonth()||sel.getFullYear()!==view.getFullYear())view=new Date(sel.getFullYear(),sel.getMonth(),1);
+  renderCal();renderFocus();renderStats();renderBars();renderChart();
+}
+const q=document.getElementById("q"),res=document.getElementById("res");
+q.oninput=()=>{const t=q.value.trim().toLowerCase();
+  if(t.length<2){res.classList.remove("show");return}
+  const m=lessons.filter(a=>a.t.toLowerCase().includes(t)||DATA[a.i][0].toLowerCase().includes(t)).slice(0,8);
+  res.innerHTML=m.length?m.map(a=>`<button data-k="${a.k}"><span class="tag" style="background:${COLORS[a.i]}">${SHORT[a.i]}</span><span>${esc(a.t)}</span><small>${fmt(P(a.k))}</small></button>`).join(""):`<div class="empty" style="padding:8px 10px">Nenhuma aula encontrada.</div>`;
+  res.classList.add("show");
+  res.querySelectorAll("button").forEach(b=>b.onclick=()=>{sel=P(b.dataset.k);res.classList.remove("show");q.value="";renderAll();document.getElementById("foco").scrollIntoView({behavior:"smooth"})});
+};
+document.addEventListener("click",e=>{if(!e.target.closest(".search"))res.classList.remove("show")});
+document.getElementById("prev").onclick=()=>{view.setMonth(view.getMonth()-1);sel=new Date(view);renderAll()};
+document.getElementById("next").onclick=()=>{view.setMonth(view.getMonth()+1);sel=new Date(view);renderAll()};
+document.getElementById("modo").onchange=renderChart;
+window.addEventListener("resize",renderChart);
+document.querySelectorAll(".nav-b").forEach(a=>a.onclick=()=>document.querySelectorAll(".nav-b").forEach(x=>x.classList.toggle("on",x===a)));
+document.getElementById("hoje-txt").textContent=fmt(TODAY,{weekday:"long",day:"numeric",month:"long"});
+renderAll();
 </script>
 </body>
 </html>
