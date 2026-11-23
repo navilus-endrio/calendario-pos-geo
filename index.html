@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calendário de aulas — Pós em Georreferenciamento</title>
+<style>
+:root{--bg:#fff;--fg:#1f1f1d;--muted:#8a8984;--sec:#5f5e5a;--line:#e3e1da;--a-bg:#e1f5ee;--a-fg:#0f6e56;--b-bg:#eeedfe;--b-fg:#534ab7;--n-bg:#f1efe8;--r-bg:#fcebeb;--r-fg:#a32d2d}
+@media (prefers-color-scheme:dark){:root{--bg:#1c1c1a;--fg:#ecebe6;--muted:#888780;--sec:#b4b2a9;--line:#3a3a37;--a-bg:#085041;--a-fg:#9fe1cb;--b-bg:#3c3489;--b-fg:#cecbf6;--n-bg:#2c2c2a;--r-bg:#501313;--r-fg:#f09595}}
+body{margin:0;padding:24px;background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:760px;margin:0 auto}
+h1{font-size:20px;font-weight:500;margin:0 0 4px}
+.sub{color:var(--sec);font-size:13px;margin:0 0 16px}
+.key{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--sec);margin:0 0 12px}
+.cal{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin:0 0 20px}
+.m h2{font-size:14px;font-weight:500;margin:0 0 6px;text-transform:capitalize}
+.g{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:11px;text-align:center}
+.g span{padding:3px 0;border-radius:4px}
+.wd{color:var(--muted)}
+.lg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px 16px;font-size:12px}
+.lg div{display:flex;gap:8px;align-items:center;padding:4px 6px;border-radius:6px}
+.lg .now{outline:1px solid var(--line)}
+.sw{width:12px;height:12px;border-radius:3px;flex:none}
+.r{color:var(--sec)}
+</style>
+</head>
+<body>
+<main>
+<h1>Calendário de aulas — Pós em Georreferenciamento, Gestão Territorial e Geoprocessamento</h1>
+<p class="sub">Readequado em 23/11/2026 com os números do AVA: 163 aulas e 7 avaliações. Prazo final: 04/02/2027.</p>
+<div class="key">
+<span><span style="display:inline-block;width:10px;height:10px;border:1.5px solid var(--fg);border-radius:3px;vertical-align:-1px"></span> hoje</span>
+<span>dia sublinhado: avaliação</span>
+<span>cinza: folga</span>
+</div>
+<div class="cal" id="cal"></div>
+<div class="lg" id="lg"></div>
+</main>
+<script>
+const B=[["Cartografia, Geodésia e Projeções","2026-11-23","2026-11-27",13],["Reurb","2026-11-28","2026-12-06",24],["Aerofotogrametria com Drones","2026-12-07","2026-12-14",21],["Métodos, Medidas e Ajustamento","2026-12-15","2026-12-23",25],["Topografia Aplicada","2026-12-24","2027-01-03",30],["Direito Ambiental","2027-01-04","2027-01-12",24],["Licenciamento Ambiental","2027-01-13","2027-01-22",26]];
+const C=[["var(--a-bg)","var(--a-fg)"],["var(--b-bg)","var(--b-fg)"]];
+const P=s=>{const[a,b,c]=s.split("-").map(Number);return new Date(a,b-1,c)};
+const now=new Date(),T=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+const F0=P("2027-01-23"),F1=P("2027-02-03"),END=P("2027-02-04");
+const key=d=>d.toDateString();const info={};
+B.forEach((b,i)=>{const s=P(b[1]),e=P(b[2]);for(let d=new Date(s);d<=e;d.setDate(d.getDate()+1))info[key(d)]={i,ev:key(d)===key(e)}});
+const fmt=d=>d.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"});
+const cal=document.getElementById("cal");
+[[2026,10],[2026,11],[2027,0],[2027,1]].forEach(([y,m])=>{
+ const first=new Date(y,m,1),n=new Date(y,m+1,0).getDate();
+ let h=`<div class="m"><h2>${first.toLocaleDateString("pt-BR",{month:"long",year:"numeric"})}</h2><div class="g">`+["D","S","T","Q","Q","S","S"].map(x=>`<span class="wd">${x}</span>`).join("");
+ for(let k=0;k<first.getDay();k++)h+="<span></span>";
+ for(let d=1;d<=n;d++){const dt=new Date(y,m,d),f=info[key(dt)];let st="";
+  if(f){const c=C[f.i%2];st=`background:${c[0]};color:${c[1]};`+(f.ev?"text-decoration:underline;font-weight:500;":"")}
+  else if(dt>=F0&&dt<=F1)st="background:var(--n-bg);color:var(--sec);";
+  else if(key(dt)===key(END))st="background:var(--r-bg);color:var(--r-fg);font-weight:500;";
+  else st="color:var(--muted);";
+  if(key(dt)===key(T))st+="outline:1.5px solid var(--fg);outline-offset:-1.5px;";
+  h+=`<span style="${st}" title="${f?B[f.i][0]+(f.ev?" — avaliação":""):""}">${d}</span>`}
+ cal.insertAdjacentHTML("beforeend",h+"</div></div>")});
+const lg=document.getElementById("lg");
+B.forEach((b,i)=>{const s=P(b[1]),e=P(b[2]),days=Math.round((e-s)/864e5)+1,cur=T>=s&&T<=e;
+ lg.insertAdjacentHTML("beforeend",`<div class="${cur?"now":""}"><span class="sw" style="background:${C[i%2][0]}"></span><span style="flex:1">${b[0]}</span><span class="r">${fmt(s)}–${fmt(e)} · ${b[3]} aulas · ${(b[3]/days).toFixed(1).replace(".",",")}/dia</span></div>`)});
+lg.insertAdjacentHTML("beforeend",`<div><span class="sw" style="background:var(--n-bg)"></span><span style="flex:1">Folga</span><span class="r">23/01–03/02 · 12 dias</span></div><div><span class="sw" style="background:var(--r-bg)"></span><span style="flex:1">Prazo final do curso</span><span style="color:var(--r-fg)">04/02/2027</span></div>`);
+</script>
+</body>
+</html>
